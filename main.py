@@ -59,10 +59,10 @@ def game():
 
     snake_tails = []
 
-    for i in range(75):
+    for i in range(2):
         snake_tails.append([snake_pos["x"] + 10 * i, snake_pos["y"]])
 
-    for i in range(75):
+    for i in range(2):
         enemy_tails.append([enemy_pos["x"] + 10 * i, enemy_pos["y"]])
 
     # еда
@@ -336,6 +336,20 @@ def game():
                 enemy_tails = enemy_tails[:i]
                 break
 
+        #столкновение с хвостом противника
+        # for i, v in enumerate(snake_tails):
+        #     if (snake_pos["x"] + snake_pos["x_change"] == enemy_tails[i][0]
+        #             and snake_pos["y"] + snake_pos["y_change"] == enemy_tails[i][1]):
+        #         # sound2.play()
+        #         snake_tails = snake_tails[:i]
+        #         break
+        #
+        # for i, v in enumerate(enemy_tails):
+        #     if (enemy_pos["x"] + enemy_pos["x_change"] == enemy_tails[i][0]
+        #             and enemy_pos["y"] + enemy_pos["y_change"] == enemy_tails[i][1]):
+        #         # sound2.play()
+        #         enemy_tails = enemy_tails[:i]
+        #         break
         pygame.display.update()
 
         clock.tick(30)
