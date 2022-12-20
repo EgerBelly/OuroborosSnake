@@ -6,12 +6,9 @@ def game():
     import pygame
     import random
     pygame.mixer
-    from random import randint
-    from copy import deepcopy
-    import numpy as np
-    from numba import njit
+
     sound = pygame.mixer.Sound("notification.wav")
-    sound2 = pygame.mixer.Sound("ahtung-ahtung.wav")
+    #sound2 = pygame.mixer.Sound("ahtung-ahtung.wav")
     sound3 = pygame.mixer.Sound("film-i-televidenie-legkaya-melodiya-otkryivayuschiy-korotkiy-saundtrek-37773.wav")
     sound3.play(-1)
 
@@ -28,7 +25,8 @@ def game():
     colors = {
         "snake_head": (0, 255, 0),
         "snake_tail": (0, 200, 0),
-        "apple": (255, 0, 0)
+        "apple": (255, 0, 0),
+        "enemy": (0 ,0, 255)
     }
 
 
@@ -39,9 +37,20 @@ def game():
         "y_change": 0
     }
 
+    enemy_pos = {
+        "x": width / 4,
+        "y": height / 4,
+        "x_change": 0,
+        "y_change": 0
+    }
 
     snake_size = (10, 10)
 
+    enemy_size = (10, 10)
+
+    enemy_speed = 10
+
+    enemy_tails = []
 
     snake_speed = 10
 
@@ -52,7 +61,11 @@ def game():
     for i in range(75):
         snake_tails.append([snake_pos["x"] + 10 * i, snake_pos["y"]])
 
-    # food
+    # enemy_pos["x_change"] = -enemy_speed
+    # for i in range(75):
+    #     enemy_tails.append([enemy_pos["x"] + 10 * i, enemy_pos["y"]])
+
+    # еда
     food_pos = {
         "x": round(random.randrange(0, width - snake_size[0]) / 10) * 10,
         "y": round(random.randrange(0, height - snake_size[1]) / 10) * 10,
@@ -75,27 +88,26 @@ def game():
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT and snake_pos["x_change"] == 0:
-                    # move left
+                    # лево
                     snake_pos["x_change"] = -snake_speed
                     snake_pos["y_change"] = 0
 
                 elif event.key == pygame.K_RIGHT and snake_pos["x_change"] == 0:
-                    # move right
+                    # право
                     snake_pos["x_change"] = snake_speed
                     snake_pos["y_change"] = 0
 
                 elif event.key == pygame.K_UP and snake_pos["y_change"] == 0:
-                    # move up
+                    # вверх
                     snake_pos["x_change"] = 0
                     snake_pos["y_change"] = -snake_speed
 
                 elif event.key == pygame.K_DOWN and snake_pos["y_change"] == 0:
-                    # move down
+                    # вниз
                     snake_pos["x_change"] = 0
                     snake_pos["y_change"] = snake_speed
 
                 elif event.key == pygame.K_ESCAPE:
-                    # Задаем ширину и высоту экрана
 
                     sound3.stop()
 
@@ -104,17 +116,15 @@ def game():
 
                     screen.blit(background, (0, 0))
 
-                    # Установить заголовок окна
                     pygame.display.set_caption("Змейка")
 
                     done = False
                     clock = pygame.time.Clock()
 
-                    # Основной цикл программы
                     while done == False:
-                        # Пользователь что-то сделал
+
                         for event in pygame.event.get():
-                            # Реагируем на действия пользователя
+
                             if event.type == pygame.QUIT:
                                 sound3.play()
                                 done = True
@@ -122,10 +132,9 @@ def game():
                                 if event.key == pygame.K_ESCAPE:
                                     sound3.play()
                                     done = True
-                                    break
 
 
-                        #Тут можно рисовать
+
                         fontObj = pygame.font.Font('8bitwonderrusbylyajka_nominal.otf', 30)
                         textSurfaceObj1 = fontObj.render('PAUSE', True, (0, 255, 0))
                         textRectObj1 = textSurfaceObj1.get_rect()
@@ -144,11 +153,11 @@ def game():
                         clock.tick(30)
 
 
-        # clear screen
+        # очистить экран
         display.blit(background, (0, 0))
 
 
-        # move snake tails
+        # координаты хвоста
         ltx = snake_pos["x"]
         lty = snake_pos["y"]
 
@@ -162,7 +171,7 @@ def game():
             ltx = _ltx
             lty = _lty
 
-        # draw snake tails
+        #  рисуем хвост
         for t in snake_tails:
             pygame.draw.rect(display, colors["snake_tail"], [
                 t[0],
@@ -170,11 +179,21 @@ def game():
                 snake_size[0],
                 snake_size[1]])
 
-        # draw snake
+
+        # pygame.draw.rect(display, colors["enemy"], [
+        #     t[1],
+        #     t[0],
+        #     enemy_size[0],
+        #     enemy_size[1]])
+
+        # рисуем змею полностью
         snake_pos["x"] += snake_pos["x_change"]
         snake_pos["y"] += snake_pos["y_change"]
 
-        # teleport snake, if required
+        # enemy_pos["x"] += enemy_pos["x_change"]
+        # enemy_pos["y"] += enemy_pos["y_change"]
+
+        # телепорт на противоположную сторону
         if (snake_pos["x"] < -snake_size[0]):
             snake_pos["x"] = width
 
@@ -193,7 +212,13 @@ def game():
             snake_size[0],
             snake_size[1]])
 
-        # draw food
+        pygame.draw.rect(display, colors["enemy"], [
+            enemy_pos["x"],
+            enemy_pos["y"],
+            enemy_size[0],
+            enemy_size[1]])
+
+        # рисуем еду
 
         pygame.draw.rect(display, colors["apple"], [
             food_pos["x"],
@@ -201,7 +226,7 @@ def game():
             food_size[0],
             food_size[1]])
 
-        # detect collision with food
+        # столкновение с едой
         if (snake_pos["x"] == food_pos["x"]
                 and snake_pos["y"] == food_pos["y"]):
             sound.play()
@@ -212,67 +237,33 @@ def game():
                 "x": round(random.randrange(0, width - snake_size[0]) / 10) * 10,
                 "y": round(random.randrange(0, height - snake_size[1]) / 10) * 10,
             }
-        # TILE = 10
-        # W, H = width // TILE, height // TILE
-        # FPS = 30
-        # next_field = np.array([[0 for i in range(W)] for j in range(H)])
-        # current_field = np.array([[0 for i in range(W)] for j in range(H)])
-        #
-        # def set_glider_SE(current_field, x, y):
-        #     pos = [(x,y), (x+1, y+1), (x-1, y+2), (x, y+2), (x+1, y+2)]
-        #     for i, j in pos:
-        #         current_field[j][i] = 1
-        #     return current_field
-        # def set_glider_NW(current_field, x, y):
-        #     pos = [(x,y), (x-2, y-1), (x-2, y), (x-2, y+1), (x-1, y-1)]
-        #     for i, j in pos:
-        #         current_field[j][i] = 1
-        #     return current_field
-        # for _ in range(5):
-        #     i0, j0 = random.randrange(1, W // 2 + W // 4, 1), random.randrange(TILE, H // 2)
-        #     current_field =  set_glider_SE(current_field, i0, j0)
-        #     i1, j1 = random.randrange(W // 2 - W // 4, W - TILE), random.randrange(H // 2, H - TILE)
-        #     current_field = set_glider_NW(current_field, i1, j1)
-        #
-        # @njit(fastmath=True)
-        # def check_cells(current_field, next_field):
-        #     res = []
-        #     for x in range(W):
-        #         for y in range(H):
-        #             count = 0
-        #             for j in range(y - 1, y + 2):
-        #                 for i in range(x - 1, x + 2):
-        #                     if current_field[j % H][i % W] == 1:
-        #                         count += 1
-        #             if current_field[y][x] == 1:
-        #                 count-=1
-        #                 if count == 2 or count == 3:
-        #                     next_field[y][x] = 1
-        #                     res.append((x, y))
-        #                 else:
-        #                     next_field[y][x] == 0
-        #             else:
-        #                 if count == 3:
-        #                     next_field[y][x] = 1
-        #                     res.append((x,y))
-        #                 else:
-        #                     next_field[y][x] = 0
-        #     return next_field, res
-        #
-        # #while True:
-        #
-        # for event in pygame.event.get():
-        #     if event.type == pygame.QUIT:
-        #         exit()
-        # #  draw life
-        # next_field, res = check_cells(current_field, next_field)
-        # [pygame.draw.rect(display, pygame.Color(255, 255, 0),
-        #                   (x * TILE + 1, y * TILE + 1, TILE - 1, TILE - 1)) for x, y in res]
-        # current_field = deepcopy(next_field)
-        # pygame.display.flip()
-        # #clock.tick(FPS)
 
-        # detect collision with tail
+        # if (snake_pos["x"] == enemy_pos["x"]
+        #         and snake_pos["y"] == enemy_pos["y"]):
+        #     while True:
+        #         sound3.stop()
+        #         fontObj2 = pygame.font.Font('8bitwonderrusbylyajka_nominal.otf', 30)
+        #         textSurfaceObj3 = fontObj2.render('proigral epta', True, (0, 255, 0))
+        #         textRectObj3 = textSurfaceObj3.get_rect()
+        #         textRectObj3.center = (width / 2 - 10, height / 2 - 10)
+        #         display.blit(textSurfaceObj3, textRectObj3)
+        #         pygame.display.flip()
+        #         for event in pygame.event.get():
+        #             if event.type == pygame.QUIT:
+        #                 pygame.quit()
+        #
+        #             elif event.type == pygame.KEYDOWN:
+        #                 if event.key == pygame.K_ESCAPE:
+        #                     break
+
+
+            food_pos = {
+                "x": round(random.randrange(0, width - snake_size[0]) / 10) * 10,
+                "y": round(random.randrange(0, height - snake_size[1]) / 10) * 10,
+            }
+
+
+        # столкновение с хвостом
         for i, v in enumerate(snake_tails):
             if (snake_pos["x"] + snake_pos["x_change"] == snake_tails[i][0]
                     and snake_pos["y"] + snake_pos["y_change"] == snake_tails[i][1]):
@@ -282,9 +273,8 @@ def game():
 
         pygame.display.update()
 
-        # set FPS
         clock.tick(30)
 
     sound3.stop()
-    return 666
+
 
