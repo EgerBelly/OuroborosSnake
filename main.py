@@ -98,8 +98,6 @@ def game():
                     # Задаем ширину и высоту экрана
 
                     sound3.stop()
-                    yellow = (255, 255, 0)
-                    blue = (0, 0, 255)
 
                     size = [640, 480]
                     screen = pygame.display.set_mode(size)
