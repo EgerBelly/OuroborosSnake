@@ -26,7 +26,9 @@ def game():
         "snake_head": (0, 255, 0),
         "snake_tail": (0, 200, 0),
         "apple": (255, 0, 0),
-        "enemy": (0 ,0, 255)
+        "enemy": (0, 0, 128),
+        "enemy_head": (0, 0, 255),
+        "gold_apple": (255, 255, 0)
     }
 
 
@@ -57,21 +59,23 @@ def game():
 
     snake_tails = []
 
-    snake_pos["x_change"] = -snake_speed
     for i in range(75):
         snake_tails.append([snake_pos["x"] + 10 * i, snake_pos["y"]])
 
-    # enemy_pos["x_change"] = -enemy_speed
-    # for i in range(75):
-    #     enemy_tails.append([enemy_pos["x"] + 10 * i, enemy_pos["y"]])
+    for i in range(75):
+        enemy_tails.append([enemy_pos["x"] + 10 * i, enemy_pos["y"]])
 
     # еда
     food_pos = {
         "x": round(random.randrange(0, width - snake_size[0]) / 10) * 10,
         "y": round(random.randrange(0, height - snake_size[1]) / 10) * 10,
     }
-
+    food_gold_pos = {
+        "x": round(random.randrange(0, width - enemy_size[0]) / 10) * 10,
+        "y": round(random.randrange(0, height - enemy_size[1]) / 10) * 10,
+    }
     food_size = (10, 10)
+
     food_eaten = 0
 
 
@@ -106,7 +110,25 @@ def game():
                     # вниз
                     snake_pos["x_change"] = 0
                     snake_pos["y_change"] = snake_speed
+                if event.key == pygame.K_a and enemy_pos["x_change"] == 0:
+                    # лево
+                    enemy_pos["x_change"] = -enemy_speed
+                    enemy_pos["y_change"] = 0
 
+                elif event.key == pygame.K_d and enemy_pos["x_change"] == 0:
+                    # право
+                    enemy_pos["x_change"] = enemy_speed
+                    enemy_pos["y_change"] = 0
+
+                elif event.key == pygame.K_w and enemy_pos["y_change"] == 0:
+                    # вверх
+                    enemy_pos["x_change"] = 0
+                    enemy_pos["y_change"] = -enemy_speed
+
+                elif event.key == pygame.K_s and enemy_pos["y_change"] == 0:
+                    # вниз
+                    enemy_pos["x_change"] = 0
+                    enemy_pos["y_change"] = enemy_speed
                 elif event.key == pygame.K_ESCAPE:
 
                     sound3.stop()
@@ -130,10 +152,8 @@ def game():
                                 done = True
                             elif event.type == pygame.KEYDOWN:
                                 if event.key == pygame.K_ESCAPE:
-                                    sound3.play()
+                                    sound3.play(-1)
                                     done = True
-
-
 
                         fontObj = pygame.font.Font('8bitwonderrusbylyajka_nominal.otf', 30)
                         textSurfaceObj1 = fontObj.render('PAUSE', True, (0, 255, 0))
@@ -161,6 +181,9 @@ def game():
         ltx = snake_pos["x"]
         lty = snake_pos["y"]
 
+        ltx1 = enemy_pos["x"]
+        lty1 = enemy_pos["y"]
+
         for i, v in enumerate(snake_tails):
             _ltx = snake_tails[i][0]
             _lty = snake_tails[i][1]
@@ -171,6 +194,16 @@ def game():
             ltx = _ltx
             lty = _lty
 
+        for i, v in enumerate(enemy_tails):
+            _ltx1 = enemy_tails[i][0]
+            _lty1 = enemy_tails[i][1]
+
+            enemy_tails[i][0] = ltx1
+            enemy_tails[i][1] = lty1
+
+            ltx1 = _ltx1
+            lty1 = _lty1
+
         #  рисуем хвост
         for t in snake_tails:
             pygame.draw.rect(display, colors["snake_tail"], [
@@ -179,19 +212,19 @@ def game():
                 snake_size[0],
                 snake_size[1]])
 
-
-        # pygame.draw.rect(display, colors["enemy"], [
-        #     t[1],
-        #     t[0],
-        #     enemy_size[0],
-        #     enemy_size[1]])
+        for q in enemy_tails:
+            pygame.draw.rect(display, colors["enemy"], [
+                q[0],
+                q[1],
+                enemy_size[0],
+                enemy_size[1]])
 
         # рисуем змею полностью
         snake_pos["x"] += snake_pos["x_change"]
         snake_pos["y"] += snake_pos["y_change"]
 
-        # enemy_pos["x"] += enemy_pos["x_change"]
-        # enemy_pos["y"] += enemy_pos["y_change"]
+        enemy_pos["x"] += enemy_pos["x_change"]
+        enemy_pos["y"] += enemy_pos["y_change"]
 
         # телепорт на противоположную сторону
         if (snake_pos["x"] < -snake_size[0]):
@@ -206,13 +239,25 @@ def game():
         elif (snake_pos["y"] > height):
             snake_pos["y"] = 0
 
+        if (enemy_pos["x"] < -enemy_size[0]):
+            enemy_pos["x"] = width
+
+        elif (enemy_pos["x"] > width):
+            enemy_pos["x"] = 0
+
+        elif (enemy_pos["y"] < -enemy_size[1]):
+            enemy_pos["y"] = height
+
+        elif (enemy_pos["y"] > height):
+            enemy_pos["y"] = 0
+
         pygame.draw.rect(display, colors["snake_head"], [
             snake_pos["x"],
             snake_pos["y"],
             snake_size[0],
             snake_size[1]])
 
-        pygame.draw.rect(display, colors["enemy"], [
+        pygame.draw.rect(display, colors["enemy_head"], [
             enemy_pos["x"],
             enemy_pos["y"],
             enemy_size[0],
@@ -223,6 +268,12 @@ def game():
         pygame.draw.rect(display, colors["apple"], [
             food_pos["x"],
             food_pos["y"],
+            food_size[0],
+            food_size[1]])
+
+        pygame.draw.rect(display, colors["gold_apple"], [
+            food_gold_pos["x"],
+            food_gold_pos["y"],
             food_size[0],
             food_size[1]])
 
@@ -237,29 +288,36 @@ def game():
                 "x": round(random.randrange(0, width - snake_size[0]) / 10) * 10,
                 "y": round(random.randrange(0, height - snake_size[1]) / 10) * 10,
             }
-
-        # if (snake_pos["x"] == enemy_pos["x"]
-        #         and snake_pos["y"] == enemy_pos["y"]):
-        #     while True:
-        #         sound3.stop()
-        #         fontObj2 = pygame.font.Font('8bitwonderrusbylyajka_nominal.otf', 30)
-        #         textSurfaceObj3 = fontObj2.render('proigral epta', True, (0, 255, 0))
-        #         textRectObj3 = textSurfaceObj3.get_rect()
-        #         textRectObj3.center = (width / 2 - 10, height / 2 - 10)
-        #         display.blit(textSurfaceObj3, textRectObj3)
-        #         pygame.display.flip()
-        #         for event in pygame.event.get():
-        #             if event.type == pygame.QUIT:
-        #                 pygame.quit()
-        #
-        #             elif event.type == pygame.KEYDOWN:
-        #                 if event.key == pygame.K_ESCAPE:
-        #                     break
-
+        if (enemy_pos["x"] == food_pos["x"]
+                and enemy_pos["y"] == food_pos["y"]):
+            sound.play()
+            food_eaten += 1
+            enemy_tails.append([food_pos["x"], food_pos["y"]])
 
             food_pos = {
+                "x": round(random.randrange(0, width - enemy_size[0]) / 10) * 10,
+                "y": round(random.randrange(0, height - enemy_size[1]) / 10) * 10,
+            }
+
+        if (snake_pos["x"] == food_gold_pos["x"]
+                and snake_pos["y"] == food_gold_pos["y"]):
+            sound.play()
+            food_eaten += 1
+            snake_tails.append([food_gold_pos["x"], food_gold_pos["y"]])
+
+            food_gold_pos = {
                 "x": round(random.randrange(0, width - snake_size[0]) / 10) * 10,
                 "y": round(random.randrange(0, height - snake_size[1]) / 10) * 10,
+            }
+        if (enemy_pos["x"] == food_gold_pos["x"]
+                and enemy_pos["y"] == food_gold_pos["y"]):
+            sound.play()
+            food_eaten += 1
+            enemy_tails.append([food_gold_pos["x"], food_gold_pos["y"]])
+
+            food_gold_pos = {
+                "x": round(random.randrange(0, width - enemy_size[0]) / 10) * 10,
+                "y": round(random.randrange(0, height - enemy_size[1]) / 10) * 10,
             }
 
 
@@ -269,6 +327,13 @@ def game():
                     and snake_pos["y"] + snake_pos["y_change"] == snake_tails[i][1]):
                 #sound2.play()
                 snake_tails = snake_tails[:i]
+                break
+
+        for i, v in enumerate(enemy_tails):
+            if (enemy_pos["x"] + enemy_pos["x_change"] == enemy_tails[i][0]
+                    and enemy_pos["y"] + enemy_pos["y_change"] == enemy_tails[i][1]):
+                #sound2.play()
+                enemy_tails = enemy_tails[:i]
                 break
 
         pygame.display.update()
